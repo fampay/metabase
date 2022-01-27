@@ -49,7 +49,7 @@
 (defn- raise-source-query-expression-ref
   "Convert an `:expression` reference from a source query into an appropriate `:field` clause for use in the surrounding
   query."
-  [{:keys [expressions source-query], :as query} [_ expression-name opts :as clause]]
+  [{:keys [expressions source-query], :as query} [_ expression-name opts :as _clause]]
   (let [expression-definition        (or (get expressions (keyword expression-name))
                                          (throw (ex-info (tru "No expression named {0}" (pr-str expression-name))
                                                          {:type            qp.error-type/invalid-query

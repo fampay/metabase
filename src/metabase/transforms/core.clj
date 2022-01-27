@@ -104,7 +104,7 @@
   (m/assoc-some query :filter (de/resolve-dimension-clauses bindings name filter)))
 
 (defn- maybe-add-limit
-  [bindings {:keys [limit]} query]
+  [_bindings {:keys [limit]} query]
   (m/assoc-some query :limit limit))
 
 (s/defn ^:private transform-step! :- Bindings
@@ -141,7 +141,7 @@
                :entity     table}])))
 
 (s/defn ^:private apply-transform-to-tableset! :- Bindings
-  [tableset :- Tableset, {:keys [steps provides]} :- TransformSpec]
+  [tableset :- Tableset, {:keys [steps _provides]} :- TransformSpec]
   (driver/with-driver (-> tableset first table/database :engine)
     (reduce transform-step! (tableset->bindings tableset) (vals steps))))
 
