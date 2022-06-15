@@ -9,20 +9,18 @@
             [metabase.driver.sql-jdbc.common :as sql-jdbc.common]
             [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
-            [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql-jdbc.sync :as sql-jdbc.sync]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.mbql.util :as mbql.u]
-            [metabase.public-settings :as pubset]
+            [metabase.public-settings :as public-settings]
             [metabase.query-processor.store :as qp.store]
-            [metabase.query-processor.util :as qputil]
+            [metabase.query-processor.util :as qp.util]
             [metabase.util.honeysql-extensions :as hx]
             [metabase.util.i18n :refer [trs]])
   (:import [java.sql Connection PreparedStatement ResultSet Types]
            java.time.OffsetTime))
 
-(driver/register! :redshift, :parent #{:postgres ::legacy/use-legacy-classes-for-read-and-set})
-
+(driver/register! :redshift, :parent #{:postgres})
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                             metabase.driver impls                                              |
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -206,20 +204,6 @@
      :OpenSourceSubProtocolOverride false}
     (dissoc opts :host :port :db))))
 
-(prefer-method
- sql-jdbc.execute/read-column-thunk
- [::legacy/use-legacy-classes-for-read-and-set Types/TIMESTAMP]
- [:postgres Types/TIMESTAMP])
-
-(prefer-method
- sql-jdbc.execute/read-column-thunk
- [::legacy/use-legacy-classes-for-read-and-set Types/TIME]
- [:postgres Types/TIME])
-
-(prefer-method
- sql-jdbc.execute/set-parameter
- [::legacy/use-legacy-classes-for-read-and-set OffsetTime]
- [:postgres OffsetTime])
 
 (defn- field->parameter-value
   "Map fields used in parameters to parameter `:value`s."
@@ -236,16 +220,16 @@
                     [(:name (qp.store/field field-id)) (:value param)]))))
         user-parameters))
 
-(defmethod qputil/query->remark :redshift
+(defmethod qp.util/query->remark :redshift
   [_ {{:keys [executed-by query-hash card-id]} :info, :as query}]
   (str "/* partner: \"metabase\", "
        (json/generate-string {:dashboard_id        nil ;; requires metabase/metabase#11909
                               :chart_id            card-id
                               :optional_user_id    executed-by
-                              :optional_account_id (pubset/site-uuid)
+                              :optional_account_id (public-settings/site-uuid)
                               :filter_values       (field->parameter-value query)})
        " */ "
-       (qputil/default-query->remark query)))
+       (qp.util/default-query->remark query)))
 
 (defn- reducible-schemas-with-usage-permissions
   "Takes something `reducible` that returns a collection of string schema names (e.g. an `Eduction`) and returns an
