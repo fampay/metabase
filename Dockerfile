@@ -38,6 +38,9 @@ RUN apk add -U bash ttf-dejavu fontconfig curl java-cacerts && \
 COPY --from=builder /home/circleci/target/uberjar/metabase.jar /app/
 COPY bin/docker/run_metabase.sh /app/
 
+RUN curl -L https://github.com/ClickHouse/metabase-clickhouse-driver/releases/download/1.0.1/clickhouse.metabase-driver.jar > /plugins/clickhouse.metabase-driver.jar
+RUN chmod 744 /plugins/clickhouse.metabase-driver.jar
+
 # expose our default runtime port
 EXPOSE 3000
 
